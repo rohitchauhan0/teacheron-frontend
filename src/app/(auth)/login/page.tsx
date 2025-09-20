@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { apiconnector } from '@/utils/api-connector';
 import { USER_API } from '@/apis/all_api';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({ identifier: '', password: '' });
@@ -25,9 +26,19 @@ const LoginPage = () => {
     const toastId = toast.loading('Logging in...');
     try {
       const response = await apiconnector<any>('POST', LOGIN_API, formData);
-      toast.error('User is not verified')
+      if (response.data.status) {
+        toast.success('Login successful');
+        router.push('/dashboard');
+      } else {
+        toast.error(response.data.message);
+      }
     } catch (err) {
       console.log(err);
+      let errorMessage = 'Login failed';
+      if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      toast.error(errorMessage);
     }
     toast.dismiss(toastId);
 
@@ -37,8 +48,13 @@ const LoginPage = () => {
     const toastId = toast.loading('Logging in...');
     try {
       const response = await apiconnector<any>('GET', BY_GOOGLE, formData);
-    } catch (error) {
-
+      toast.error('User is not verified')
+    } catch (err) {
+      let errorMessage = 'Login failed';
+      if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      toast.error(errorMessage);
     }
 
   };

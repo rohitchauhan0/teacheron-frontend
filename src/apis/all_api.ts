@@ -5,4 +5,6 @@ export const USER_API = {
     REGISTER_TEACHER_API: `${BASE_URL}/teacher`,
     LOGIN_API : `${BASE_URL}/auth/signIn`,
     BY_GOOGLE : `${BASE_URL}/auth/google`,
+    FORGOT_PASSWORD : `${BASE_URL}/auth/forgot-password`,
+    RESET_PASSWORD : `${BASE_URL}/auth/reset-password`
 }

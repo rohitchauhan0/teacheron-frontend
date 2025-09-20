@@ -2,46 +2,49 @@
 import { useState } from 'react';
 import { useStep } from '@/context/step_context';
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { apiconnector } from '@/utils/api-connector';
 import { USER_API } from '@/apis/all_api';
 import { useFormContext } from '@/context/step_data_context';
+import axios from 'axios';
 
 const Step10 = () => {
- 
 
-  const {REGISTER_TEACHER_API} = USER_API
+
+  const { REGISTER_TEACHER_API } = USER_API
   const router = useRouter()
   const { formData, updateFormData } = useFormContext();
+  const searchParams = useSearchParams();
 
 
-  const handleSubmit = async(e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    const userId = searchParams.get('id');
     const toastId = toast.loading('Uploading...');
     e.preventDefault();
-    try{
-      const response = await apiconnector<any>('POST', REGISTER_TEACHER_API, formData);
-      toast.success('Your request has been submitted', {
-        id: toastId,
-      });
-      router.push('/dashboard')
-    }catch(err){
-      console.log(err);
+    try {
+      const response = await apiconnector<any>('POST', REGISTER_TEACHER_API, { ...formData, userId });
+      if (!response.data.status) {
+        toast.error(response.data.message)
+        return
+      }
+      else {
+        toast.success('Your request has been submitted', {
+          id: toastId,
+        });
+        router.push('/dashboard')
+      }
+
+    } catch (err) {
+      console.error(err);
+
+      let errorMessage = 'Registration failed';
+      if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      toast.error(errorMessage);
     }
 
-    // if (!file) {
-    //   alert('Please upload your ID proof');
-    //   return;
-    // }
 
-    // console.log({
-    //   docType,
-    //   fileName: file.name,
-    // });
-
-   
-
-    // Continue to next step
-    // nextStep();
   };
 
   return (

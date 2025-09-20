@@ -1,15 +1,19 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navbar from '@/app/_common_comp/Navbar';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import { USER_API } from '@/apis/all_api';
 import { apiconnector } from '@/utils/api-connector';
+import { FcGoogle } from 'react-icons/fc';
+import axios from 'axios';
 
 const RegisterPage = () => {
   const router = useRouter();
-  const { REGISTER_API } = USER_API
+    const searchParams = useSearchParams(); // 👈 get query params
+  const { REGISTER_API } = USER_API;
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,6 +21,18 @@ const RegisterPage = () => {
     role: '',
     agree: false,
   });
+
+  // Prefill name & email from query params
+  useEffect(() => {
+    const name = searchParams.get('name') || '';
+    const email = searchParams.get('email') || '';
+
+    setFormData((prev) => ({
+      ...prev,
+      name,
+      email,
+    }));
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -31,34 +47,23 @@ const RegisterPage = () => {
   };
 
   const validateForm = () => {
-
-    // Name
     if (!formData.name.trim()) {
       alert('Full Name is required.');
       return false;
     }
-
-    // Email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       alert('Enter a valid email address.');
       return false;
     }
-
-
-
-    // Role
     if (!formData.role) {
       alert('Please select a role.');
       return false;
     }
-
-    // Agreement
     if (!formData.agree) {
       alert('You must agree to the terms.');
       return false;
     }
-
     return true;
   };
 
@@ -70,6 +75,7 @@ const RegisterPage = () => {
 
     try {
       const response = await apiconnector<any>('POST', REGISTER_API, formData);
+      console.log(response);
       if (response.data.status) {
         toast.success('Email has been sent');
         router.push('/email-verify');
@@ -77,9 +83,19 @@ const RegisterPage = () => {
         toast.error(response.data.message);
       }
     } catch (err) {
-      toast.error('Something went wrong');
+      console.error(err);
+     
+      let errorMessage = 'Registration failed';
+      if (axios.isAxiosError(err) && err.response && err.response.data && err.response.data.message) {
+        errorMessage = err.response.data.message;
+      }
+      toast.error(errorMessage);
     }
     toast.dismiss(toastId);
+  };
+
+  const handleGoogleLogin = () => {
+    window.location.href = "http://localhost:8080/api/v1/auth/google";
   };
 
   return (
@@ -183,6 +199,14 @@ const RegisterPage = () => {
               Sign Up
             </button>
           </form>
+
+          <button
+            onClick={handleGoogleLogin}
+            className="flex items-center justify-center mt-5 gap-3 w-full py-3 bg-white border border-gray-300 rounded-full shadow-sm hover:shadow-md transition-all"
+          >
+            <FcGoogle size={24} />
+            <span className="text-gray-700 font-medium">Continue with Google</span>
+          </button>
 
           {/* Already have an account */}
           <p className="text-center text-sm text-gray-600 mt-6">
